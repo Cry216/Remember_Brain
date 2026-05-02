@@ -30,12 +30,23 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Environment variables - protect real keys
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
 
-# vercel
+# Keep template in repository
+!.env.example
+
+# Local database
+prisma/dev.db
+*.db
+
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
