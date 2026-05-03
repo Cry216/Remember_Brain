@@ -8,33 +8,34 @@ datasource db {
 }
 
 model Document {
-  id          String           @id @default(cuid())
-  title       String
-  fileName    String
-  mimeType    String
-  sourceType  String
-  sizeBytes   Int
-  checksum    String           @unique
-  status      DocumentStatus   @default(PROCESSING)
-  error       String?
-  chunkCount  Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  chunks      DocumentChunk[]
+  id             String          @id @default(cuid())
+  title          String
+  fileName       String
+  mimeType       String
+  sourceType     String
+  sizeBytes      Int
+  checksum       String          @unique
+  status         DocumentStatus  @default(PROCESSING)
+  error          String?
+  chunkCount     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  chunks         DocumentChunk[]
+  securityEvents SecurityEvent[]
 }
 
 model DocumentChunk {
-  id              String   @id @default(cuid())
-  documentId      String
-  chunkIndex      Int
-  content         String
-  tokenCount      Int?
-  embedding       String
-  embeddingModel  String
-  embeddingDim    Int
-  metadata        String?
-  createdAt       DateTime @default(now())
-  document        Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  documentId     String
+  chunkIndex     Int
+  content        String
+  tokenCount     Int?
+  embedding      String
+  embeddingModel String
+  embeddingDim   Int
+  metadata       String?
+  createdAt      DateTime @default(now())
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
@@ -44,4 +45,29 @@ enum DocumentStatus {
   PROCESSING
   READY
   FAILED
+}
+
+model SecurityEvent {
+  id         String           @id @default(cuid())
+  eventType  String
+  severity   SecuritySeverity @default(LOW)
+  action     String?
+  source     String?
+  message    String
+  metadata   String?
+  documentId String?
+  document   Document?        @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  createdAt  DateTime         @default(now())
+
+  @@index([eventType])
+  @@index([severity])
+  @@index([documentId])
+  @@index([createdAt])
+}
+
+enum SecuritySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
