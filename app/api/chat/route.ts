@@ -1,39 +1,65 @@
-// app/api/chat/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { NextResponse } from "next/server";
 
-const model = new ChatGoogleGenerativeAI({
-    modelName: "gemini-2.5-flash",
-    temperature: 0.7,
-    apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
+import { retrieveRagContext } from "@/lib/rag/context";
+import { getChatModel, modelContentToString } from "@/lib/rag/llm";
 
-export async function POST(req: NextRequest) {
-    try {
-        const { message } = await req.json();
+export const runtime = "nodejs";
 
-        if (!message || !message.trim()) {
-            return NextResponse.json({ response: "Напиши что-нибудь 🙂" });
-        }
+type ChatRequestBody = {
+  message?: unknown;
+};
 
-        console.log("📨 Получено сообщение:", message);
+function buildPrompt(message: string, context: string) {
+  const personalContext = context || "No relevant personal document chunks were found.";
 
-        const result = await model.invoke(
-            `Ты — Remember Brain, дружелюбный и умный персональный Second Brain.
-Ты помогаешь пользователю вспоминать, думать и развивать свои знания.
-Отвечай естественно, по делу и с лёгким юмором, когда это уместно.
+  return `You are Remember Brain, a helpful personal second brain assistant.
 
-Пользователь: ${message}
+Use the user's personal document context when it is relevant. You may also use general knowledge, but keep the boundary clear: do not invent facts from the user's documents.
 
-Твой ответ:`
-        );
+If the personal context does not answer the question, say that briefly and then answer from general knowledge if useful.
 
-        return NextResponse.json({ response: result.content });
+<personal_document_context>
+${personalContext}
+</personal_document_context>
 
-    } catch (error: any) {
-        console.error("❌ Chat API Error:", error);
-        return NextResponse.json({
-            response: "Извини, что-то пошло не так... Попробуй ещё раз."
-        });
+User message:
+${message}
+
+Answer naturally and cite document titles or file names when you rely on the personal context.`;
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as ChatRequestBody;
+    const message = typeof body.message === "string" ? body.message.trim() : "";
+
+    if (!message) {
+      return NextResponse.json(
+        {
+          response: "Send me a question and I will search your second brain.",
+          sources: [],
+        },
+        { status: 400 },
+      );
     }
+
+    const { context, sources } = await retrieveRagContext(message);
+    const result = await getChatModel().invoke(buildPrompt(message, context));
+    const response = modelContentToString(result.content);
+
+    return NextResponse.json({
+      response: response || "I could not generate a useful answer this time.",
+      sources,
+    });
+  } catch (error) {
+    console.error("Chat API error", { error });
+
+    return NextResponse.json(
+      {
+        response: "Sorry, I could not search and answer right now.",
+        sources: [],
+      },
+      { status: 500 },
+    );
+  }
 }
