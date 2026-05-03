@@ -13,15 +13,19 @@ export async function POST(req: NextRequest) {
         const { message } = await req.json();
 
         if (!message || !message.trim()) {
-            return NextResponse.json({ response: "Напиши что-нибудь 🙂" });
+            return NextResponse.json({ response: "Write something 🙂" });
         }
 
         const result = await model.invoke(
-            `Ты — Remember Brain, дружелюбный и умный персональный Second Brain.
+            `You are Remember Brain — a friendly, intelligent, and helpful Personal Second Brain.
 
-Пользователь: ${message}
+You help the user remember, organize, think, and develop their knowledge.
+Always respond in clear, natural, and professional English.
+Be concise, useful, and slightly witty when appropriate.
 
-Отвечай естественно и по делу:`
+User: ${message}
+
+Your response:`
         );
 
         return NextResponse.json({ response: result.content });
@@ -29,7 +33,7 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         console.error("Chat API Error:", error);
         return NextResponse.json({
-            response: "Извини, что-то пошло не так... Попробуй ещё раз."
+            response: "Sorry, something went wrong... Try again."
         });
     }
 }
