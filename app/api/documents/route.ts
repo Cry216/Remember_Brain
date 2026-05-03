@@ -11,13 +11,6 @@ export async function GET() {
     orderBy: {
       createdAt: "desc",
     },
-    include: {
-      _count: {
-        select: {
-          securityEvents: true,
-        },
-      },
-    },
   });
 
   return NextResponse.json({
@@ -30,7 +23,7 @@ export async function GET() {
       status: document.status,
       error: document.error,
       chunkCount: document.chunkCount,
-      securityEventCount: document._count.securityEvents,
+      securityEventCount: 0,
       createdAt: document.createdAt.toISOString(),
     })),
   });
