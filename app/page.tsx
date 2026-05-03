@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, DatabaseZap, FileUp, MessageSquare } from "lucide-react";
+import { BookOpen, Check, DatabaseZap, FileUp, MessageSquare } from "lucide-react";
 
 const actions = [
   {
@@ -32,9 +32,14 @@ export default function Home() {
               <p className="text-xs text-zinc-500">Personal second brain SaaS</p>
             </div>
           </div>
-          <div className="hidden items-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400 sm:flex">
-            <DatabaseZap className="h-4 w-4 text-emerald-300" />
-            SQLite RAG active
+          <div className="hidden items-center gap-4 text-sm sm:flex">
+            <a href="#pricing" className="text-zinc-400 transition hover:text-zinc-100">
+              Pricing
+            </a>
+            <div className="flex items-center gap-2 rounded-lg border border-zinc-800 px-3 py-2 text-xs text-zinc-400">
+              <DatabaseZap className="h-4 w-4 text-emerald-300" />
+              SQLite RAG active
+            </div>
           </div>
         </header>
 
@@ -76,6 +81,80 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      <section id="pricing" className="border-t border-zinc-900 px-5 py-20">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-12 text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-white md:text-5xl">
+              Simple pricing
+            </h2>
+            <p className="mt-3 text-sm text-zinc-400">Choose what fits you best</p>
+          </div>
+
+          <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/55 p-8">
+              <h3 className="text-2xl font-semibold text-zinc-50">Free</h3>
+              <p className="mt-4 text-5xl font-semibold tracking-tight text-white">
+                $0<span className="text-base font-normal text-zinc-500">/month</span>
+              </p>
+
+              <ul className="mt-8 space-y-4 text-sm text-zinc-300">
+                {["Up to 50 documents", "Basic memory search", "Gemini Flash", "Chat history"].map(
+                  (feature) => (
+                    <li key={feature} className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-300" />
+                      {feature}
+                    </li>
+                  ),
+                )}
+              </ul>
+
+              <Link
+                href="/chat"
+                className="mt-10 flex h-14 items-center justify-center rounded-lg bg-zinc-800 text-sm font-semibold text-zinc-100 transition hover:bg-zinc-700"
+              >
+                Start for Free
+              </Link>
+            </div>
+
+            <div className="relative rounded-lg border border-violet-400 bg-violet-600 p-8 text-white shadow-[0_0_80px_rgba(124,58,237,0.18)]">
+              <div className="absolute right-8 top-0 -translate-y-1/2 rounded-full bg-white px-5 py-1 text-xs font-bold uppercase text-violet-600">
+                Recommended
+              </div>
+              <h3 className="text-2xl font-semibold">Pro</h3>
+              <p className="mt-4 text-5xl font-semibold tracking-tight">
+                $12<span className="text-base font-normal text-white/70">/month</span>
+              </p>
+
+              <ul className="mt-8 space-y-4 text-sm text-white/90">
+                {[
+                  "Unlimited documents & memory",
+                  "Advanced RAG",
+                  "Faster model (Gemini 2.5 Pro)",
+                  "Smart auto-tagging",
+                  "Priority support",
+                ].map((feature) => (
+                  <li key={feature} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-white" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+
+              <button
+                type="button"
+                className="mt-10 flex h-14 w-full items-center justify-center rounded-lg bg-white text-sm font-semibold text-violet-600 transition hover:bg-zinc-100"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
+          </div>
+
+          <p className="mt-16 text-center text-sm text-zinc-500">
+            Made for people who want to remember more and think better.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

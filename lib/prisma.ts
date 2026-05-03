@@ -7,6 +7,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 export function getPrisma() {
+  process.env.DATABASE_URL ??= "file:./dev.db";
+
   if (!globalForPrisma.prisma) {
     globalForPrisma.prisma = new PrismaClient();
   }
