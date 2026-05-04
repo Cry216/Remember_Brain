@@ -47,6 +47,7 @@ const ACTIVE_CHAT_KEY = "remember-brain-active-chat";
 const CHAT_TTL_MS = 2 * 24 * 60 * 60 * 1000;
 const MAX_CHAT_SESSIONS = 7;
 const MAX_MESSAGE_CHARACTERS = 2000;
+const MAX_REQUEST_HISTORY_MESSAGES = 8;
 
 function welcomeMessage(): ChatMessage {
   return {
@@ -136,6 +137,25 @@ function looksLikeSensitiveRequest(message: string) {
 
 function countCharacters(text: string) {
   return Array.from(text.trim()).length;
+}
+
+function requestHistoryFromMessages(messages: ChatMessage[]) {
+  return messages
+    .filter((message) => message.content.trim().length > 0)
+    .slice(-MAX_REQUEST_HISTORY_MESSAGES)
+    .map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+}
+
+function formatSourceConfidence(score: number) {
+  if (score <= 0) return "";
+
+  const normalized = Math.max(0, Math.min(1, score));
+  const percent = Math.round(Math.min(94, Math.max(40, 35 + normalized * 60)));
+
+  return `${percent}% match`;
 }
 
 export default function ChatPage() {
@@ -268,7 +288,11 @@ export default function ChatPage() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed, allowSensitive: consentForMessage }),
+        body: JSON.stringify({
+          message: trimmed,
+          allowSensitive: consentForMessage,
+          history: requestHistoryFromMessages(activeSession.messages),
+        }),
       });
       const data = (await response.json()) as {
         response?: string;
@@ -461,29 +485,34 @@ export default function ChatPage() {
                       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
                         Sources
                       </p>
-                      {message.sources.slice(0, 4).map((source) => (
-                        <Link
-                          key={`${source.documentId}-${source.chunkIndex}`}
-                          href={`/documents/${source.documentId}?q=${encodeURIComponent(
-                            message.query ?? "",
-                          )}#chunk-${source.chunkIndex}`}
-                          className="group mt-2 flex items-center justify-between gap-3 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-2 text-xs text-sky-100 transition hover:border-sky-300 hover:bg-sky-500/15"
-                        >
-                          <span className="flex min-w-0 items-center gap-2">
-                            <FileText className="h-4 w-4 shrink-0" />
-                            <span className="min-w-0">
-                              <span className="block truncate font-medium">{source.title}</span>
-                              <span className="block truncate text-sky-200/70">
-                                {source.fileName} - chunk {source.chunkIndex + 1}
+                      {message.sources.slice(0, 4).map((source) => {
+                        const confidence = formatSourceConfidence(source.score);
+
+                        return (
+                          <Link
+                            key={`${source.documentId}-${source.chunkIndex}`}
+                            href={`/documents/${source.documentId}?q=${encodeURIComponent(
+                              message.query ?? "",
+                            )}#chunk-${source.chunkIndex}`}
+                            className="group mt-2 flex items-center justify-between gap-3 rounded-lg border border-sky-500/25 bg-sky-500/10 px-3 py-2 text-xs text-sky-100 transition hover:border-sky-300 hover:bg-sky-500/15"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <FileText className="h-4 w-4 shrink-0" />
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{source.title}</span>
+                                <span className="block truncate text-sky-200/70">
+                                  {source.fileName} - chunk {source.chunkIndex + 1}
+                                  {confidence ? ` - ${confidence}` : ""}
+                                </span>
                               </span>
                             </span>
-                          </span>
-                          <span className="inline-flex shrink-0 items-center gap-1 text-sky-200 group-hover:text-white">
-                            Open
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </span>
-                        </Link>
-                      ))}
+                            <span className="inline-flex shrink-0 items-center gap-1 text-sky-200 group-hover:text-white">
+                              Open
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </span>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : null}
                 </div>
